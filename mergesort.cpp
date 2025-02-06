@@ -3,6 +3,8 @@
 #include <chrono>
 #include <random>
 #include <cstdlib>
+#include <iomanip>
+#include <sstream>  // For std::stoll
 
 using namespace std;
 
@@ -36,12 +38,12 @@ void merge(vector<int>& arr, int left, int mid, int right) {
         }
     }
 
-    // Copy any remaining elements of leftArr, if there are any
+    // Copy any remaining elements of leftArr
     while (i < sizeLeft) {
         arr[k++] = leftArr[i++];
     }
 
-    // Copy any remaining elements of rightArr, if there are any
+    // Copy any remaining elements of rightArr
     while (j < sizeRight) {
         arr[k++] = rightArr[j++];
     }
@@ -72,44 +74,55 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // Convert the first argument to an integer for the array size
-    int n = atoi(argv[1]);
-    if (n <= 0) {
-        cerr << "Error: array size must be a positive integer." << endl;
+    // Convert the first argument to a 64-bit integer for the array size
+    long long n;
+    try {
+        n = stoll(argv[1]);
+    } catch (...) {
+        cerr << "Invalid array size: please provide a numeric value." << endl;
         return 1;
     }
 
+    // Ensure the array size is between 1 and 1,000,000,000
+    if (n <= 0 || n > 1000000000LL) {
+        cerr << "Error: array size must be a positive integer up to 1000000000." << endl;
+        return 1;
+    }
+
+    // Allocate the vector. Note: static_cast<size_t>(n) is used because vector size is size_t.
+    vector<int> data(static_cast<size_t>(n));
+
     // Generate an array of 'n' random integers
-    vector<int> data(n);
     random_device rd;
     mt19937 gen(rd());
     uniform_int_distribution<> dis(0, 1000000); // numbers between 0 and 1,000,000
 
-    for (int i = 0; i < n; ++i) {
+    for (size_t i = 0; i < data.size(); ++i) {
         data[i] = dis(gen);
     }
 
-    // Print the unsorted array
-    cout << "Unsorted numbers:" << endl;
-    printVector(data);
+    // (Optional) Print the unsorted array if n is small (uncomment if desired)
+    // cout << "Unsorted numbers:" << endl;
+    // printVector(data);
 
     // Record the start time
     auto startTime = chrono::high_resolution_clock::now();
 
     // Perform merge sort on the array
-    mergeSort(data, 0, n - 1);
+    mergeSort(data, 0, static_cast<int>(data.size()) - 1);
 
-    // Record the end time
+    // Record the end time and compute elapsed time in milliseconds
     auto endTime = chrono::high_resolution_clock::now();
-    chrono::duration<double> elapsed = endTime - startTime;
+    chrono::duration<double, std::milli> elapsed = endTime - startTime;
 
-    // Print the sorted array
-    cout << "Sorted numbers:" << endl;
-    printVector(data);
+    // (Optional) Print the sorted array if n is small (uncomment if desired)
+    // cout << "Sorted numbers:" << endl;
+    // printVector(data);
 
-    // Print the elapsed time to sort the array
+    // Print the elapsed time in milliseconds, rounded to two decimals
+    cout << fixed << setprecision(2);
     cout << "Time taken to sort " << n << " elements: " 
-         << elapsed.count() << " seconds" << endl;
+         << elapsed.count() << " ms" << endl;
 
     return 0;
 }
